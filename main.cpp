@@ -19,7 +19,9 @@ int main()
 
   Window* window = new Window("Snake", 720, 1080);
   Snake* snake = new Snake(block_side);
-  A_star* a_star = new A_star((unsigned int)block_side, &snake->head);
+  A_star* a_star = new A_star((unsigned int)block_side,nullptr);
+
+  a_star->set_src(&snake->head[0]);
   snake->generate_food();
   SDL_Event e;
   bool running = true;
@@ -57,7 +59,10 @@ int main()
     if(counter == 1000)
     {
       snake->movement(snake->direction);
-      if(snake->is_food_eaten()) snake->generate_food();
+      if(snake->is_food_eaten()) {
+        snake->generate_food();
+        a_star->set_dist(&snake->food_coord);
+      }
       counter = 0;
     }
 
