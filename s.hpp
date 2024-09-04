@@ -1,6 +1,3 @@
-#ifndef S_HPP_
-#define S_HPP_
-
 #include <SDL2/SDL_rect.h>
 #include <cstdio>
 #include <cstdlib>
@@ -80,5 +77,3 @@ class Snake
         food_coord.y = ((rand() % 720) / block_side ) * block_side;
     }
 };
-
-#endif
