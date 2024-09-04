@@ -1,25 +1,45 @@
 #include <SDL2/SDL_events.h>
+#include <SDL2/SDL_rect.h>
 #include <SDL2/SDL_render.h>
-#include <stdio.h>
+#include <new>
+#include <iostream>
 #include <SDL2/SDL.h>
 #include <time.h>
+#include <vector>
 
 #include "./window.hpp"
 #include "./s.hpp"
-#include "A_star_algorithm.hpp"
+
+#define PRINT(x) std::cout << x << "\n"
+
+
+struct Sector
+{
+  SDL_Point coord;
+  float distance;
+
+  bool operator==(const Sector& s)
+  {
+    return (this->coord.x == s.coord.x && this->coord.y == s.coord.y);
+  }
+};
 
 void render_grid(Window* window, int block_side);
 void render_food(Window* window, Snake* snake, int block_side);
 void render_snake(Window* window, Snake* snake);
+void set_neighbour(SDL_Point p,int block_side, SDL_Point food_coord , std::vector<Sector>* neighbours);
+float get_distance(SDL_Point a, SDL_Point b);
+int pop_closest_sector(Snake* s,std::vector<Sector>* neighbours);
 
 int main()
 {
   srand(time(0));
   int block_side = 50;
 
-  Window* window = new Window("Snake", 720, 1080);
+  Window* window = new Window("Snake", 750, 1100);
   Snake* snake = new Snake(block_side);
-  A_star* a_star = new A_star((unsigned int)block_side, &snake->head);
+  std::vector<Sector>* neighbours = new std::vector<Sector>;
+
   snake->generate_food();
   SDL_Event e;
   bool running = true;
@@ -56,7 +76,23 @@ int main()
     counter++;
     if(counter == 1000)
     {
-      snake->movement(snake->direction);
+      set_neighbour(snake->head[0], block_side ,snake->food_coord ,neighbours);
+      switch (pop_closest_sector(snake ,neighbours)) 
+      {
+        case 0:
+          snake->movement('w');
+          break;
+        case 1:
+         snake->movement('s');
+          break;
+        case 2:
+         snake->movement('d'); 
+          break;
+        case 3:
+          snake->movement('a');
+          break;
+      }
+      neighbours->clear();
       if(snake->is_food_eaten()) snake->generate_food();
       counter = 0;
     }
@@ -64,6 +100,52 @@ int main()
     window->render(window->window);
   }
   return 0;
+}
+
+void set_neighbour(SDL_Point p,int block_side ,SDL_Point food_coord, std::vector<Sector>* neighbours)
+{ 
+  neighbours->push_back({{p.x , p.y - block_side}, 0});
+  neighbours->at(0).distance = get_distance(neighbours->at(0).coord, food_coord );
+
+  PRINT(neighbours->at(0).distance);
+
+  neighbours->push_back({{p.x , p.y + block_side}, 0});
+  neighbours->at(1).distance = get_distance(neighbours->at(1).coord, food_coord );
+
+  PRINT(neighbours->at(1).distance);
+  neighbours->push_back({{p.x + block_side , p.y}, 0});
+  neighbours->at(2).distance = get_distance(neighbours->at(2).coord, food_coord );
+
+  PRINT(neighbours->at(2).distance);
+  neighbours->push_back({{p.x - block_side , p.y}, 0});
+  neighbours->at(3).distance = get_distance(neighbours->at(3).coord, food_coord );
+  PRINT(neighbours->at(3).distance);
+}
+
+int pop_closest_sector( Snake* s,std::vector<Sector>* neighbours)
+{
+  int closest_sector = 0;
+  for(int i = 1 ; i < neighbours->size() ; ++i)
+  {
+    if(neighbours->at(i).distance < neighbours->at(closest_sector).distance)
+    {
+      if(s->collision_detection(neighbours->at(i).coord))
+      {
+        continue;
+      }
+      closest_sector = i;
+    }
+  }
+  PRINT(neighbours->at(closest_sector).distance << "  " << closest_sector);
+  return closest_sector;
+}
+
+float get_distance(SDL_Point a, SDL_Point b)
+{
+  float dx = b.x - a.x;
+  float dy = b.y - a.y;
+
+  return sqrt((dx*dx) + (dy*dy));
 }
 
 void render_grid(Window* window, int block_side)

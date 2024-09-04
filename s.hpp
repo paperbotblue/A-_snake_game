@@ -31,6 +31,14 @@ class Snake
         }
         return false;
     }
+    bool collision_detection(SDL_Point p)
+    {
+       if(head[0].x == p.x && head[0].y == p.y)  
+       {
+         return true;
+       }
+       return false;
+    }
     bool is_food_eaten()
     {
         if(head[0].x == food_coord.x && head[0].y == food_coord.y) 
@@ -43,7 +51,6 @@ class Snake
     }
     void movement(char dir)
     {
-        printf("snake data current : (%d, %d)\n", head[0].x, head[0].y);
         direction = dir;
         switch (direction) 
         {
@@ -61,7 +68,6 @@ class Snake
                 break;
         }
         head.pop_back();
-        printf("snake data next : (%d, %d)\n", head[0].x, head[0].y);
         for(int i = 0 ; i < this->size ; ++i)
         {
             if(head[i].x > 1080) head[i].x = 0;
