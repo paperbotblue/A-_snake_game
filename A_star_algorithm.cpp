@@ -6,9 +6,8 @@
 #include <cstddef>
 #include <cstdio>
 
-A_star::A_star(unsigned int sector_size ,std::vector<SDL_Point>* walls) 
+A_star::A_star(unsigned int sector_size ,std::vector<SDL_Point*>* walls) 
 {
-  this->walls = walls;
   this->sector_size = sector_size;
   this->run_flag = false;
   found_flag = false;
@@ -21,14 +20,53 @@ void A_star::run()
   printf("shit set\n");
 }
 
-void A_star::execuate()
+void A_star::execuate(Snake *s)
 {
   if(found_flag) return;
   if(!run_flag) run();
   Sector current = pop_closest_sector(this->neighbour_sectors); 
-  walked_sectors.push_back(current);
+  // shit code begains here
+printf("aaacycle one completed\n");
+
+  if(current.coord.x == s->head[0].x && current.coord.y == s->head[0].y - sector_size)
+  {
+    s->movement('w');
+  }
+  else if (current.coord.x == s->head[0].x - sector_size && current.coord.y == s->head[0].y)
+  {
+    s->movement('a');
+  }
+  else if (current.coord.x == s->head[0].x + sector_size && current.coord.y == s->head[0].y) 
+  {
+    s->movement('d');
+  }
+  else if(current.coord.x == s->head[0].x && current.coord.y == s->head[0].y + sector_size)
+  {
+    s->movement('s');
+  }
+  else if(current.coord.x == s->head[0].x - sector_size && current.coord.y == s->head[0].y - sector_size)
+  {
+    s->movement('s');
+    s->movement('w');
+  }
+  else if(current.coord.x == s->head[0].x + sector_size && current.coord.y == s->head[0].y - sector_size)
+  {
+    s->movement('d');
+    s->movement('w');
+  }
+  else if (current.coord.x == s->head[0].x - sector_size && current.coord.y == s->head[0].y + sector_size) {
+    s->movement('s');
+    s->movement('a');
+  }
+  else if(current.coord.x == s->head[0].x + sector_size && current.coord.y == s->head[0].y + sector_size)
+  {
+    s->movement('d');
+    s->movement('s');
+  }
+
   if(current.coord.x == dist.x && current.coord.y == dist.y) {found_flag = true; return;}
   set_neighbour(current);
+
 }
 
 void A_star::set_src(SDL_Point p)
@@ -78,7 +116,7 @@ void A_star::set_neighbour(Sector current)
         temp.coord.y+=sector_size;
         break;
     }
-    if(!is_wall(temp) && !is_walked_sector(temp)) {
+
       temp.g_cost = get_distance(temp.coord, src);
       temp.h_cost = get_distance(temp.coord, dist);
       if(!is_present(temp))
@@ -86,20 +124,10 @@ void A_star::set_neighbour(Sector current)
         neighbour_sectors.push_back(temp);    
       }
     }
-  }
+  
   print_shit();
 }
-bool A_star::is_wall(Sector sector)
-{
-  for(size_t i = 0 ; i < walls->size() ; ++i)
-  {
-    if(sector.coord.x == walls->at(i).x && sector.coord.y == walls->at(i).y)
-    {
-      return true;
-    }
-  }
-  return false;
-}
+
 
 bool A_star::is_present(Sector sector)
 {
@@ -110,17 +138,7 @@ bool A_star::is_present(Sector sector)
   return false;
 }
 
-bool A_star::is_walked_sector(Sector sector)
-{
-  for(size_t i = 0 ; i < walked_sectors.size() ; ++i )
-  {
-    if(sector.coord.x == walked_sectors.at(i).coord.x && sector.coord.y == walked_sectors.at(i).coord.y)
-    {
-      return true;
-    }
-  }
-  return false;
-}
+
 
 Sector A_star::pop_closest_sector(std::vector<Sector> neighbour_sectors)
 {
@@ -153,25 +171,7 @@ float A_star::get_distance(SDL_Point a, SDL_Point b)
   return sqrt((dx*dx) + (dy*dy));
 }
 
-void A_star::render_shit(SDL_Renderer* renderer)
-{
-  SDL_Rect r;
-/*
-  SDL_SetRenderDrawColor(renderer, 0xFF, 0x33, 0x33, 0xFF);
-  for(size_t i = 0 ; i < neighbour_sectors.size() ; ++i)
-  {
-    r = {neighbour_sectors[i].coord.x, neighbour_sectors[i].coord.y, sector_size, sector_size};
-    SDL_RenderFillRect(renderer, &r);
-  }
-*/
-  SDL_SetRenderDrawColor(renderer, 0x00, 0xFF, 0x33, 0xFF);
-  for(size_t i = 0 ; i < walked_sectors.size() ; ++i )
-  {
-    r = {walked_sectors[i].coord.x,walked_sectors[i].coord.y, sector_size, sector_size};
-    SDL_RenderFillRect(renderer, &r);
-  }
 
-}
 
 void A_star::delete_clone(Sector sector)
 {

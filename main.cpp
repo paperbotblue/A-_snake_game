@@ -1,5 +1,6 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_render.h>
+#include <new>
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <time.h>
@@ -19,8 +20,13 @@ int main()
 
   Window* window = new Window("Snake", 720, 1080);
   Snake* snake = new Snake(block_side);
-  A_star* a_star = new A_star((unsigned int)block_side, &snake->head);
+  A_star* algo = new A_star(block_side, nullptr);
   snake->generate_food();
+
+  algo->src = snake->head[0];
+  algo->dist = snake->food_coord;
+  algo->run();
+
   SDL_Event e;
   bool running = true;
   int counter = 0;
@@ -47,7 +53,6 @@ int main()
             break;
         }
       }
-
     }
     render_grid(window, block_side);
     render_food(window, snake, block_side);
@@ -57,7 +62,15 @@ int main()
     if(counter == 1000)
     {
       snake->movement(snake->direction);
-      if(snake->is_food_eaten()) snake->generate_food();
+      algo->execuate(snake);
+
+      printf("cycle one completed\n");
+      if(snake->is_food_eaten()) 
+      {
+        snake->generate_food();
+        algo->dist = snake->food_coord;
+        algo->src = snake->head[0];
+      }
       counter = 0;
     }
 
